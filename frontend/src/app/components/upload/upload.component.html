@@ -1,0 +1,19 @@
+<div class="upload-container">
+  <h2 class="upload-heading">Upload a PDF File</h2>
+
+  <div class="upload-area" (click)="fileInput.click()">
+    <div class="upload-icon">
+      <i class="fas fa-cloud-upload-alt"></i>
+    </div>
+    <p class="upload-text">Click to upload or drag and drop</p>
+    <small class="upload-hint">PDF files only • Max 10MB</small>
+  </div>
+
+  <input
+    #fileInput
+    type="file"
+    accept=".pdf"
+    (change)="handleFile($event)"
+    style="display: none"
+  />
+</div>

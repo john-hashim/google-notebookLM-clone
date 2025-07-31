@@ -1,0 +1,27 @@
+<div class="chat-container">
+  @if (appStore.uploadedFile()) {
+  <div class="chat-layout">
+    <div class="chat-left">
+      <!-- Hold for now -->
+    </div>
+
+    <div class="chat-right">
+      <div class="pdf-viewer">
+        <pdf-viewer
+          [src]="appStore.uploadedFile()?.url"
+          [render-text]="true"
+          [original-size]="false"
+          [fit-to-page]="true"
+          [show-all]="true"
+          style="display: block; width: 100%; height: 100%"
+        >
+        </pdf-viewer>
+      </div>
+    </div>
+  </div>
+  } @else {
+  <div class="no-pdf">
+    <p>No PDF uploaded. Redirecting...</p>
+  </div>
+  }
+</div>

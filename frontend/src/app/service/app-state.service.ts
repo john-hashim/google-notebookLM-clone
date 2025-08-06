@@ -1,10 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-
-export interface UploadedFile {
-  file: File;
-  url: string;
-  name: string;
-}
+import { UploadedFile } from '../models/app.models';
 
 @Injectable({
   providedIn: 'root',
@@ -24,4 +19,5 @@ export class AppStateService {
   clearFile() {
     this.uploadedFile.set(null);
   }
+
 }

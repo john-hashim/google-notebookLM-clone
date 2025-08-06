@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { AppStateService } from '../../service/app-state.service';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -13,7 +13,7 @@ import { FeatureService } from '../../service/feature.service';
   templateUrl: './chat-view.component.html',
   styleUrl: './chat-view.component.scss',
 })
-export class ChatViewComponent implements OnInit {
+export class ChatViewComponent implements OnInit, OnDestroy {
   appStore = inject(AppStateService);
   router = inject(Router);
   sanitizer = inject(DomSanitizer);
@@ -37,5 +37,15 @@ export class ChatViewComponent implements OnInit {
         console.error('Upload failed:', error);
       },
     });
+  }
+
+  clearDocument(): void{
+    this.featureService.clearDocument().subscribe(() => {
+      this.router.navigate(['/']);
+    })
+  }
+
+  ngOnDestroy(): void {
+      this.clearDocument()
   }
 }

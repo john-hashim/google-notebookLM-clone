@@ -1,12 +1,18 @@
 import pdfParse from "pdf-parse";
-import OpenAI from "openai";
 import dotenv from "dotenv";
+import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const initializeGemini = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable is required");
+  }
+
+  return new GoogleGenAI({ apiKey });
+};
 
 export const extractTextFromPdf = async (
   pdfBuffer: Buffer
@@ -97,24 +103,22 @@ export const processPdfToChunks = async (
 };
 
 export const generateEmbeddings = async (chunks: string[]) => {
+  const ai = initializeGemini();
   const embeddings = [];
 
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
+  for (const chunk of chunks) {
     if (!chunk) continue;
 
-    const response = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: chunk,
+    const response = await ai.models.embedContent({
+      model: "embedding-001",
+      contents: [chunk],
     });
-
-    if (response.data && response.data[0] && response.data[0].embedding) {
+    if (response && response.embeddings && response.embeddings[0]) {
       embeddings.push({
         text: chunk,
-        embedding: response.data[0].embedding,
+        embedding: response.embeddings[0].values,
       });
     }
   }
-
   return embeddings;
 };

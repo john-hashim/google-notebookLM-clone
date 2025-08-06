@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import multer from "multer";
-import { generateEmbeddings, processPdfToChunks } from "./services/pdfProcessor";
+import {
+  generateEmbeddings,
+  processPdfToChunks,
+} from "./services/pdfProcessor";
+import { v4 as uuidv4 } from "uuid";
+import { COLLECTION_NAME, qdrantClient } from "./services/qdrant";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -12,61 +17,69 @@ export const uploadMiddleware = upload.single("pdf");
 export const uploadPdf = async (req: Request, res: Response) => {
   try {
     const file = req.file;
-    const fileName = req.body.fileName;
 
     if (!file) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'No PDF file uploaded' 
+      return res.status(400).json({
+        success: false,
+        message: "No PDF file uploaded",
       });
     }
 
-    if (file.mimetype !== 'application/pdf') {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Only PDF files are allowed' 
+    if (file.mimetype !== "application/pdf") {
+      return res.status(400).json({
+        success: false,
+        message: "Only PDF files are allowed",
       });
     }
 
     const chunks = await processPdfToChunks(file.buffer);
-
     const embeddings = await generateEmbeddings(chunks);
-    
-    console.log(`Created ${embeddings.length} embeddings`);
+
+    const points = embeddings.map((result) => ({
+      id: uuidv4(),
+      vector: result.embedding as number[],
+      payload: {
+        content: result.text,
+        fileName: file.originalname,
+      },
+    }));
+
+    await qdrantClient.upsert(COLLECTION_NAME, {
+      wait: true,
+      points: points,
+    });
 
     return res.json({
       success: true,
-      message: 'PDF processed successfully',
-      data: {
-        fileName: fileName || file.originalname,
-        size: file.size,
-        chunksCount: chunks.length
-        // documentId: documentId // Will add this later
-      }
+      message: "PDF processed and stored successfully",
+      chunksCount: chunks.length,
     });
-
   } catch (error) {
-    console.error('Upload error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Failed to process PDF' 
+    console.error("Upload error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process PDF",
     });
   }
 };
 
-// export const clearDocument = async (req: Request, res: Response) => {
-//   try {
-//     console.log("Clearing document from memory/vector storage");
+export const clearDocument = async (req: Request, res: Response) => {
+  try {
+    console.log("Clearing document from memory/vector storage");
 
-//     res.json({
-//       success: true,
-//       message: "Document cleared successfully",
-//     });
-//   } catch (error) {
-//     console.error("Clear document error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to clear document",
-//     });
-//   }
-// };
+    await qdrantClient.delete(COLLECTION_NAME, {
+      filter: {},
+    });
+
+    res.json({
+      success: true,
+      message: "Document cleared successfully",
+    });
+  } catch (error) {
+    console.error("Clear document error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to clear document",
+    });
+  }
+};

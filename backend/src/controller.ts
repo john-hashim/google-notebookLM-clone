@@ -63,7 +63,7 @@ export const uploadPdf = async (req: Request, res: Response) => {
   }
 };
 
-export const clearDocument = async (req: Request, res: Response) => {
+export const clearDocument = async (res: Response) => {
   try {
     console.log("Clearing document from memory/vector storage");
 

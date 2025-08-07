@@ -41,7 +41,6 @@ app.use('*', (res: Response) => {
 const startServer = async () => {
   try {
     await initializeQdrantCollection();   
-    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
